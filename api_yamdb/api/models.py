@@ -1,9 +1,10 @@
 from django.db import models
-from django.core.validators import MaxValueValidator, MinValueValidator
-from django.utils.text import slugify
 from django.utils import timezone
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.contrib.auth import get_user_model
+from django.utils.text import slugify
 
-from .models import CustomUser
+User = get_user_model()
 
 # ｡◕‿‿◕｡
 
@@ -111,7 +112,7 @@ class Reviews(models.Model):
         related_name='reviews'
     )
     author = models.ForeignKey(
-        CustomUser,
+        User,
         on_delete=models.CASCADE,
         related_name='reviews'
     )
@@ -153,7 +154,7 @@ class Comments(models.Model):
         related_name='comments'
     )
     author = models.ForeignKey(
-        CustomUser,
+        User,
         on_delete=models.CASCADE,
         related_name='comments'
     )

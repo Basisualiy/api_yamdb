@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Categories, Genres, Titles, Reviews, CustomUser
+from .models import Categories, Genres, Titles, Reviews
+
 
 # (｡◕‿◕｡)
 
