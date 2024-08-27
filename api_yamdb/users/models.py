@@ -15,7 +15,8 @@ class CustomUser(AbstractUser):
                             choices=ROLES,
                             default='user')
     bio = models.CharField('Биография',
-                           max_length=1024)
+                           max_length=1024,
+                           blank=True)
 
     class Meta:
         verbose_name = 'Пользователь'
