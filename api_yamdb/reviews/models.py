@@ -14,6 +14,7 @@ class Categories(models.Model):
 
     name = models.CharField(
         verbose_name='Категория',
+        max_length=256,
     )
     slug = models.SlugField(
         max_length=50,
@@ -161,16 +162,11 @@ class Comments(models.Model):
     text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    pub_date = models.DateTimeField(
-        'Дата добавления',
-        auto_now_add=True,
-        db_index=True
-    )
 
     class Meta:
         """Мета класс комментария."""
 
-        ordering = ('-pub_date',)
+        ordering = ('-created_at',)
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
 
