@@ -18,8 +18,6 @@ class Categories(models.Model):
         max_length=50,
         unique=True,
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
         """Генерирует slug из названия категории, еесли он не указан."""
@@ -48,8 +46,6 @@ class Genres(models.Model):
         verbose_name='Жанр',
     )
     slug = models.SlugField(max_length=50, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
         """Генерирует slug из названия жанра, если он не указан."""
@@ -77,7 +73,7 @@ class Titles(models.Model):
         verbose_name='Год выпуска',
         validators=[
             MaxValueValidator(timezone.now().year),
-            MinValueValidator(1800)
+            MinValueValidator(0)
         ]
     )
     description = models.TextField(blank=True, verbose_name='Описание')
@@ -93,8 +89,6 @@ class Titles(models.Model):
         related_name='titles',
         verbose_name='Категория'
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         """Мета класс произведения."""
