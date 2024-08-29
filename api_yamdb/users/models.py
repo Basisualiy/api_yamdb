@@ -1,7 +1,9 @@
+import uuid
+
 from django.contrib.auth.models import AbstractUser
 from django.core import validators
 from django.db import models
-
+from django.db.models import UUIDField
 
 ROLES = [
     ('user', 'Пользователь'),
@@ -29,6 +31,10 @@ class CustomUser(AbstractUser):
                             default='user')
     bio = models.TextField('Биография',
                            blank=True)
+    confirmation_code = UUIDField('Код для получения/обновления токена',
+                                  default=uuid.uuid4,
+                                  editable=False,
+                                  unique=True)
 
     class Meta:
         verbose_name = 'Пользователь'
