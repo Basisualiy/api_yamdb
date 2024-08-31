@@ -30,8 +30,8 @@ class TokenSerializer(serializers.ModelSerializer):
         model = User
         fields = ('username', 'confirmation_code')
 
-def validate(self, data):
-    user = get_object_or_404(User, username=data['username'])
-    if user.confirmation_code != data.get('confirmation_code'):
-        raise serializers.ValidationError('Не верный confirmation_code')
-    return {'access': str(AccessToken.for_user(user))}
+    def validate(self, data):
+        user = get_object_or_404(User, username=data['username'])
+        if user.confirmation_code != data.get('confirmation_code'):
+            raise serializers.ValidationError('Не верный confirmation_code')
+        return {'access': str(AccessToken.for_user(user))}
