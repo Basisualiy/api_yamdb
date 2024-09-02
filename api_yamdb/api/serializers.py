@@ -25,8 +25,15 @@ class TitlesSerializer(serializers.ModelSerializer):
     genre = GenresSerializer(many=True, read_only=True)
 
     class Meta:
-        fields = '__all__'
         model = Titles
+        fields = (
+            'id',
+            'category',
+            'genre',
+            'name',
+            'year',
+            'description'
+        )
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
@@ -43,10 +50,26 @@ class ReviewsSerializer(serializers.ModelSerializer):
             'pub_date'
         )
 
+    # Уникальность отзывов на одно произведение.
+    def validate(self, data):
+        title_id = self.context['title_id']
+        if self.context['request'].method == 'POST' and Reviews.objects.filter(
+            title=title_id, author=self.context['request'].user
+        ).exists():
+            raise serializers.ValidationError(
+                'Вы уже оставляли отзыв на это произведение.')
+        return data
+
+    def create(self, validated_data):
+        return Reviews.objects.create(**validated_data)
+
 
 class CommentsSerializer(serializers.ModelSerializer):
     """Сериализатор для комментариев."""
 
     class Meta:
         model = Comments
-        fields = ('id', 'review', 'author', 'pub_date')
+        fields = ('id', 'review', 'author', 'text', 'pub_date')
+
+    def create(self, validated_data):
+        return Comments.objects.create(**validated_data)
