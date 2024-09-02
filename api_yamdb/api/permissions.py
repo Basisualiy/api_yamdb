@@ -10,7 +10,7 @@ ACCESS_LEVEL = {
 def has_access(user, role):
     """Проверяет уровень доступа пользователя."""
     return (ACCESS_LEVEL[user.role] <= ACCESS_LEVEL[role]
-            or user.is_staff)
+            or user.is_superuser)
 
 
 class IsAdminPermission(permissions.BasePermission):
@@ -37,5 +37,5 @@ class IsAuthorOrReadOnlyPermission(permissions.BasePermission):
     """
     def has_object_permission(self, request, view, obj):
         return (request.method in permissions.SAFE_METHODS
-                or request.user == obj.author  # Обязательно проверить что поле в модели называется author
+                or request.user == obj.author
                 or has_access(request.user, 'moderator'))
