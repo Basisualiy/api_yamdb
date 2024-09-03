@@ -24,13 +24,6 @@ class TokenSerializator(serializers.ModelSerializer):
         model = User
         fields = ('username', 'confirmation_code')
 
-    # def validate_username(self, value):
-    #     try:
-    #         User.objects.get(username=value)
-    #     except ObjectDoesNotExist:
-    #         raise exceptions.ValidationError('Пользователь не найден.')
-    #     return value
-
     def validate_confirmation_code(self, value):
         try:
             user = User.objects.get(username=self.initial_data.get('username'))
