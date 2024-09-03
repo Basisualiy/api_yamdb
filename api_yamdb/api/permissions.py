@@ -14,9 +14,10 @@ def has_access(user, role):
 
 
 class IsAdminPermission(permissions.BasePermission):
-    """Разрешает действия с объектом только админу или суперпользователю."""
-    def has_object_permission(self, request, view, obj):
-        return has_access(request.user, 'admin')
+    """Разрешает действия только админу или суперпользователю."""
+    def has_permission(self, request, view):
+        return (request.user.is_authenticated
+                and has_access(request.user, 'admin'))
 
 
 class IsAdminOrReadOnlyPermission(permissions.BasePermission):
