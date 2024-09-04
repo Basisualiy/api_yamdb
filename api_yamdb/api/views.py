@@ -2,7 +2,7 @@ from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, mixins, viewsets
 
-from .permissions import IsAdminOrReadOnlyPermission
+from .permissions import IsAdminOrReadOnlyPermission, IsAuthorOrReadOnlyPermission
 from .serializers import (
     CategoriesSerializer,
     GenresSerializer,
@@ -44,6 +44,8 @@ class GenresViewSet(
     filter_backends = [filters.SearchFilter]
     lookup_field = 'slug'
     search_fields = ('name',)
+    permission_classes = IsAdminOrReadOnlyPermission,
+    pagination_class = CustomPaginator
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
@@ -54,10 +56,12 @@ class TitlesViewSet(viewsets.ModelViewSet):
     )
 
     serializer_class = TitlesSerializer
+    permission_classes = IsAdminOrReadOnlyPermission,
     pagination_class = CustomPaginator
     filter_backends = [filters.SearchFilter, filters.OrderingFilter,]
     search_fields = ('name', 'year', 'genre__name', 'category__name')
     ordering_fields = ('name', 'year')
+    http_method_names = ['get', 'head', 'options', 'post', 'patch', 'delete']
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):

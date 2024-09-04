@@ -8,21 +8,31 @@ User = get_user_model()
 
 class SignUpSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
-        validators=[UniqueValidator(queryset=User.objects.all())])
+        validators=[UniqueValidator(queryset=User.objects.all())],
+        max_length=254)
 
     class Meta:
         model = User
         fields = ('email', 'username',)
 
+    def validate_email(self, value):
+        if len(value) > 254:
+            raise exceptions.ValidationError(
+                'Email не может больше 254 символов')
+        return value
+
     def validate_username(self, value):
         if value == 'me':
             raise exceptions.ValidationError(
                 'Имя пользователя не может быть: me')
+        if len(value) > 150:
+            raise exceptions.ValidationError(
+                'Имя пользователя не может быть больше 150 символов')
         return value
 
 
 class TokenSerializator(serializers.ModelSerializer):
-    username = serializers.CharField()
+    username = serializers.CharField(max_length=150)
     confirmation_code = serializers.CharField(source='password')
 
     class Meta:
