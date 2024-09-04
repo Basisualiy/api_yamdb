@@ -25,7 +25,7 @@ class CategoriesViewSet(
     queryset = Categories.objects.all()
     permission_classes = IsAdminOrReadOnlyPermission,
     serializer_class = CategoriesSerializer
-    filter_backends = (filters.SearchFilter,)
+    filter_backends = [filters.SearchFilter]
     lookup_field = 'slug'
     search_fields = ('name',)
     pagination_class = CustomPaginator
@@ -41,7 +41,7 @@ class GenresViewSet(
 
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
-    filter_backends = (filters.SearchFilter,)
+    filter_backends = [filters.SearchFilter]
     lookup_field = 'slug'
     search_fields = ('name',)
 
