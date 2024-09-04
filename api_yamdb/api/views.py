@@ -23,7 +23,7 @@ class CategoriesViewSet(
 
     queryset = Categories.objects.all()
     serializer_class = CategoriesSerializer
-    filter_backends = (filters.SearchFilter)
+    filter_backends = [filters.SearchFilter]
     lookup_field = 'slug'
     search_fields = ('name',)
 
@@ -38,7 +38,7 @@ class GenresViewSet(
 
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
-    filter_backends = (filters.SearchFilter)
+    filter_backends = [filters.SearchFilter]
     lookup_field = 'slug'
     search_fields = ('name',)
 
