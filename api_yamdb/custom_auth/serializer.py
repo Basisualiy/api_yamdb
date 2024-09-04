@@ -1,11 +1,15 @@
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ObjectDoesNotExist
-from rest_framework import exceptions, serializers
+from django.shortcuts import get_object_or_404
+from rest_framework import exceptions, serializers, status
+from rest_framework.validators import UniqueValidator
 
 User = get_user_model()
 
 
 class SignUpSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(
+        validators=[UniqueValidator(queryset=User.objects.all())])
+
     class Meta:
         model = User
         fields = ('email', 'username',)
@@ -18,17 +22,21 @@ class SignUpSerializer(serializers.ModelSerializer):
 
 
 class TokenSerializator(serializers.ModelSerializer):
+    username = serializers.CharField()
     confirmation_code = serializers.CharField(source='password')
 
     class Meta:
         model = User
         fields = ('username', 'confirmation_code')
 
-    def validate_confirmation_code(self, value):
+    def validate(self, data):
         try:
-            user = User.objects.get(username=self.initial_data.get('username'))
-        except ObjectDoesNotExist:
-            raise exceptions.ValidationError('Пользователь не найден.')
-        if not user.check_password(value):
-            raise exceptions.ValidationError()
-        return value
+            username = data['username']
+            confirmation_code = data['password']
+        except KeyError:
+            raise exceptions.ValidationError(code=status.HTTP_400_BAD_REQUEST)
+        user = get_object_or_404(User, username=username)
+        if not user.check_password(confirmation_code):
+            raise exceptions.ValidationError('Неверный код подтверждения.',
+                                             code=status.HTTP_400_BAD_REQUEST)
+        return data

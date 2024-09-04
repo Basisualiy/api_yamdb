@@ -15,8 +15,7 @@ class CustomUser(AbstractUser):
         'Имя пользователя', max_length=150, unique=True,
         validators=[validators.RegexValidator(r'^[\w.@+-]+\Z'),])
     email = models.EmailField('email пользователя',
-                              max_length=254,
-                              unique=True)
+                              max_length=254)
     first_name = models.CharField('Имя',
                                   max_length=150,
                                   blank=True)
