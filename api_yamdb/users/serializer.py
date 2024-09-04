@@ -8,7 +8,8 @@ User = get_user_model()
 class UsersSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         validators=[UniqueValidator(queryset=User.objects.all())],
-        required=True)
+        required=True,
+        max_length=254)
 
     class Meta:
         model = User
@@ -32,7 +33,8 @@ class UsersSerializer(serializers.ModelSerializer):
 class MeSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         validators=[UniqueValidator(queryset=User.objects.all())],
-        required=True)
+        required=True,
+        max_length=254)
 
     class Meta:
         model = User
