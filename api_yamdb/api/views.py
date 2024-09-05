@@ -2,14 +2,18 @@ from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, mixins, permissions, viewsets
 
-from .permissions import IsAdminOrReadOnlyPermission, IsAuthorOrReadOnlyPermission
-
+from .permissions import (
+    IsAdminOrReadOnlyPermission,
+    IsAuthorOrReadOnlyPermission
+)
 from .serializers import (
     CategoriesSerializer,
     GenresSerializer,
     TitlesSerializer,
-    ReviewSerializer,
-    CommentSerializer,
+    TitlesWriteSerializer,
+    ReviewsSerializer,
+    CommentsSerializer,
+
 )
 from reviews.models import Categories, Genres, Titles, Reviews, Comments
 from users.views import CustomPaginator
@@ -51,20 +55,35 @@ class GenresViewSet(
 
 class TitlesViewSet(viewsets.ModelViewSet):
     """ViewSet для произведений."""
-    # Добавила вычесление и включение средней оценки для каждого объекта Title.
-    queryset = (
-        Titles.objects.all()
-        .annotate(rating=Avg('reviews__score'))
-        .order_by('name')
-    )
-
     serializer_class = TitlesSerializer
     permission_classes = IsAdminOrReadOnlyPermission,
     pagination_class = CustomPaginator
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter,]
-    search_fields = ('name', 'year', 'genre__name', 'category__name')
-    ordering_fields = ('name', 'year')
     http_method_names = ['get', 'head', 'options', 'post', 'patch', 'delete']
+
+    def get_queryset(self):
+        queryset = (
+            Titles.objects.all()
+            .annotate(rating=Avg('reviews__score'))
+            .order_by('name')
+        )
+        name = self.request.query_params.get('name')
+        if name:
+            queryset = queryset.filter(name=name)
+        year = self.request.query_params.get('year')
+        if year:
+            queryset = queryset.filter(year=year)
+        genre = self.request.query_params.get('genre')
+        if genre:
+            queryset = queryset.filter(genre__slug=genre)
+        category = self.request.query_params.get('category')
+        if category:
+            queryset = queryset.filter(category__slug=category)
+        return queryset
+
+    def get_serializer_class(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            return TitlesSerializer
+        return TitlesWriteSerializer
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
