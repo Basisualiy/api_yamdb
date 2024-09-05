@@ -11,8 +11,8 @@ from .serializers import (
     GenresSerializer,
     TitlesSerializer,
     TitlesWriteSerializer,
-    ReviewsSerializer,
-    CommentsSerializer,
+    ReviewSerializer,
+    CommentSerializer,
 
 )
 from reviews.models import Categories, Genres, Titles, Reviews, Comments
