@@ -1,8 +1,11 @@
 from django.urls import include, path
 from rest_framework.routers import SimpleRouter
 
-# Import your app views
-from .views import TitlesViewSet, ReviewsViewSet, CommentsViewSet, GenresViewSet, CategoriesViewSet
+from .views import (TitlesViewSet,
+                    ReviewsViewSet,
+                    CommentsViewSet,
+                    GenresViewSet,
+                    CategoriesViewSet)
 
 # Create a router and register your viewsets
 router = SimpleRouter()

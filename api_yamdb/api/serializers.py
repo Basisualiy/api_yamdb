@@ -40,6 +40,12 @@ class TitlesSerializer(serializers.ModelSerializer):
             'genre',
             'category',
         )
+        read_only_fields = (
+            'id',
+            'name',
+            'year',
+            'description',
+        )
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -49,28 +55,62 @@ class TitlesSerializer(serializers.ModelSerializer):
             pass
         return data
 
+
+class TitlesWriteSerializer(serializers.ModelSerializer):
+    """Сериализатор для произведений."""
+
+    category = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Categories.objects.all()
+    )
+    genre = serializers.SlugRelatedField(
+        many=True, slug_field='slug',
+        queryset=Genres.objects.all())
+
+    class Meta:
+        model = Titles
+        fields = (
+            'id',
+            'name',
+            'year',
+            'description',
+            'genre',
+            'category',
+        )
+
+    # def to_representation(self, instance):
+    #     data = super().to_representation(instance)
+    #     try:
+    #         data['rating'] = instance.rating
+    #     except AttributeError:
+    #         pass
+    #     return data
+
     def create(self, validated_data):
         try:
-            category = self.initial_data['category']
-            genres = self.initial_data['genre']
+            # category = validated_data['category']
+            genres = validated_data.pop('genre')
         except KeyError:
             raise exceptions.ValidationError(code=status.HTTP_400_BAD_REQUEST)
+        # validated_data['category'] = get_object_or_404(
+        #     Categories,
+        #     slug=category
+        # )
+        title = Titles.objects.create(**validated_data)
         if isinstance(genres, list) or isinstance(genres, tuple):
-            validated_data['genre'] = [
-                get_object_or_404(Genres, slug=genre)
-                for genre in genres
-            ]
+            for genre in genres:
+                title.genre.add(genre)
+                title.save()
         else:
-            validated_data['genre'] = [get_object_or_404(
-                Genres,
-                slug=genres
-            )]
-        validated_data['category'] = get_object_or_404(
-            Categories,
-            slug=category
-        )
-        
-        return super().create(validated_data)
+            title.genre.add(get_object_or_404(Genres, slug=genres))
+            title.save()
+        return title
+
+    # def to_internal_value(self, data):
+    #     value = super().to_internal_value(data)
+    #     # value['category'] = data['category']
+    #     # value['genre'] = data['genre']
+    #     return value
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
