@@ -1,5 +1,11 @@
-from rest_framework import serializers
+from django.shortcuts import get_object_or_404
+from rest_framework import exceptions, serializers, status
 from reviews.models import Categories, Genres, Titles, Reviews, Comments
+
+
+def instance_to_dict(instance, slug):
+    obj = get_object_or_404(instance, slug=slug)
+    return {'name': obj.name, 'slug': obj.slug}
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
@@ -21,19 +27,71 @@ class GenresSerializer(serializers.ModelSerializer):
 class TitlesSerializer(serializers.ModelSerializer):
     """Сериализатор для произведений."""
 
-    category = CategoriesSerializer(read_only=False)
+    category = CategoriesSerializer(read_only=True)
     genre = GenresSerializer(many=True, read_only=True)
 
     class Meta:
         model = Titles
         fields = (
             'id',
-            'category',
-            'genre',
             'name',
             'year',
-            'description'
+            'description',
+            'genre',
+            'category',
         )
+        read_only_fields = (
+            'id',
+            'name',
+            'year',
+            'description',
+        )
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        try:
+            data['rating'] = instance.rating
+        except AttributeError:
+            pass
+        return data
+
+
+class TitlesWriteSerializer(serializers.ModelSerializer):
+    """Сериализатор для произведений."""
+
+    category = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Categories.objects.all()
+    )
+    genre = serializers.SlugRelatedField(
+        many=True, slug_field='slug',
+        queryset=Genres.objects.all())
+
+    class Meta:
+        model = Titles
+        fields = (
+            'id',
+            'name',
+            'year',
+            'description',
+            'genre',
+            'category',
+        )
+
+    def create(self, validated_data):
+        try:
+            genres = validated_data.pop('genre')
+        except KeyError:
+            raise exceptions.ValidationError(code=status.HTTP_400_BAD_REQUEST)
+        title = Titles.objects.create(**validated_data)
+        if isinstance(genres, list) or isinstance(genres, tuple):
+            for genre in genres:
+                title.genre.add(genre)
+                title.save()
+        else:
+            title.genre.add(get_object_or_404(Genres, slug=genres))
+            title.save()
+        return title
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
