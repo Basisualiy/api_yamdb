@@ -6,7 +6,6 @@ from .permissions import (
     IsAdminOrReadOnlyPermission,
     IsAuthorOrReadOnlyPermission
 )
-
 from .serializers import (
     CategoriesSerializer,
     GenresSerializer,
@@ -14,6 +13,7 @@ from .serializers import (
     TitlesWriteSerializer,
     ReviewsSerializer,
     CommentsSerializer,
+
 )
 from reviews.models import Categories, Genres, Titles, Reviews, Comments
 from users.views import CustomPaginator
@@ -90,35 +90,41 @@ class ReviewsViewSet(viewsets.ModelViewSet):
     """ViewSet для отзывов."""
 
     queryset = Reviews.objects.all()
-    serializer_class = ReviewsSerializer
+    permission_classes = IsAuthorOrReadOnlyPermission,
+    serializer_class = ReviewSerializer
     pagination_class = CustomPaginator
+
+    def get_queryset(self):
+        """Переопределение получения класса ReviewViewSet."""
+        title = get_object_or_404(Titles, id=self.kwargs.get('title_id'))
+        return title.reviews.all()
+
+    def perform_create(self, serializer):
+        """Переопределение создания класса ReviewViewSet."""
+        title = get_object_or_404(Titles, id=self.kwargs.get('title_id'))
+        serializer.save(author=self.request.user, title=title)
+
+
 
 
 class CommentsViewSet(viewsets.ModelViewSet):
     """ViewSet для комментариев."""
 
     queryset = Comments.objects.all()
-    serializer_class = CommentsSerializer
+    permission_classes = IsAuthorOrReadOnlyPermission,
+    serializer_class = CommentSerializer
     pagination_class = CustomPaginator
 
     def get_queryset(self):
-        """
-        Возвращаем комментарии, связанные с указанным отзывом,
-        используя параметры из URL.
-        """
         review = get_object_or_404(
-            Reviews.objects.filter(title_id=self.kwargs.get('title_id')),
-            pk=self.kwargs.get('review_id')
-        )
+            Reviews,
+            id=self.kwargs.get('review_id'),
+            title_id=self.kwargs.get('title_id'))
         return review.comments.all()
 
     def perform_create(self, serializer):
-        """
-        Сохраняем новый комментарий,
-        связывая его с отзывом и текущим пользователем.
-        """
         review = get_object_or_404(
-            Reviews.objects.filter(title_id=self.kwargs.get('title_id')),
-            pk=self.kwargs.get('review_id')
-        )
+            Reviews,
+            id=self.kwargs.get('review_id'),
+            title_id=self.kwargs.get('title_id'))
         serializer.save(author=self.request.user, review=review)
