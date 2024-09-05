@@ -1,5 +1,11 @@
-from rest_framework import serializers
+from django.shortcuts import get_object_or_404
+from rest_framework import exceptions, serializers, status
 from reviews.models import Categories, Genres, Titles, Reviews, Comments
+
+
+def instance_to_dict(instance, slug):
+    obj = get_object_or_404(instance, slug=slug)
+    return {'name': obj.name, 'slug': obj.slug}
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
@@ -21,19 +27,50 @@ class GenresSerializer(serializers.ModelSerializer):
 class TitlesSerializer(serializers.ModelSerializer):
     """Сериализатор для произведений."""
 
-    category = CategoriesSerializer(read_only=False)
+    category = CategoriesSerializer(read_only=True)
     genre = GenresSerializer(many=True, read_only=True)
 
     class Meta:
         model = Titles
         fields = (
             'id',
-            'category',
-            'genre',
             'name',
             'year',
-            'description'
+            'description',
+            'genre',
+            'category',
         )
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        try:
+            data['rating'] = instance.rating
+        except AttributeError:
+            pass
+        return data
+
+    def create(self, validated_data):
+        try:
+            category = self.initial_data['category']
+            genres = self.initial_data['genre']
+        except KeyError:
+            raise exceptions.ValidationError(code=status.HTTP_400_BAD_REQUEST)
+        if isinstance(genres, list) or isinstance(genres, tuple):
+            validated_data['genre'] = [
+                get_object_or_404(Genres, slug=genre)
+                for genre in genres
+            ]
+        else:
+            validated_data['genre'] = [get_object_or_404(
+                Genres,
+                slug=genres
+            )]
+        validated_data['category'] = get_object_or_404(
+            Categories,
+            slug=category
+        )
+        
+        return super().create(validated_data)
 
 
 class ReviewsSerializer(serializers.ModelSerializer):

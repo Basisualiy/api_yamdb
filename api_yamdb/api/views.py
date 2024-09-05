@@ -1,8 +1,9 @@
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
-from rest_framework import filters, mixins, viewsets
+from rest_framework import filters, mixins, permissions, viewsets
 
 from .permissions import IsAdminOrReadOnlyPermission, IsAuthorOrReadOnlyPermission
+
 from .serializers import (
     CategoriesSerializer,
     GenresSerializer,
@@ -52,7 +53,9 @@ class TitlesViewSet(viewsets.ModelViewSet):
     """ViewSet для произведений."""
     # Добавила вычесление и включение средней оценки для каждого объекта Title.
     queryset = (
-        Titles.objects.all().annotate(Avg('reviews__score')).order_by('name')
+        Titles.objects.all()
+        .annotate(rating=Avg('reviews__score'))
+        .order_by('name')
     )
 
     serializer_class = TitlesSerializer
