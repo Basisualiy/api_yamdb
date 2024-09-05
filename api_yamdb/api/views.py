@@ -54,7 +54,7 @@ class GenresViewSet(
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
-    """ViewSet для произведений."""   
+    """ViewSet для произведений."""
     serializer_class = TitlesSerializer
     permission_classes = IsAdminOrReadOnlyPermission,
     pagination_class = CustomPaginator

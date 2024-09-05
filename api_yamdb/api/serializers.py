@@ -78,24 +78,11 @@ class TitlesWriteSerializer(serializers.ModelSerializer):
             'category',
         )
 
-    # def to_representation(self, instance):
-    #     data = super().to_representation(instance)
-    #     try:
-    #         data['rating'] = instance.rating
-    #     except AttributeError:
-    #         pass
-    #     return data
-
     def create(self, validated_data):
         try:
-            # category = validated_data['category']
             genres = validated_data.pop('genre')
         except KeyError:
             raise exceptions.ValidationError(code=status.HTTP_400_BAD_REQUEST)
-        # validated_data['category'] = get_object_or_404(
-        #     Categories,
-        #     slug=category
-        # )
         title = Titles.objects.create(**validated_data)
         if isinstance(genres, list) or isinstance(genres, tuple):
             for genre in genres:
@@ -105,12 +92,6 @@ class TitlesWriteSerializer(serializers.ModelSerializer):
             title.genre.add(get_object_or_404(Genres, slug=genres))
             title.save()
         return title
-
-    # def to_internal_value(self, data):
-    #     value = super().to_internal_value(data)
-    #     # value['category'] = data['category']
-    #     # value['genre'] = data['genre']
-    #     return value
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
