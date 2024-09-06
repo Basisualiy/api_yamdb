@@ -19,7 +19,7 @@ def get_confirmation_code(email, username):
 
 class SignUpViewSet(APIView):
     """Регистрируем пользователя и высылаем ему код подтверждения."""
-    permission_classes = [permissions.AllowAny,]
+    permission_classes = [permissions.AllowAny, ]
 
     def post(self, request):
         try:
@@ -45,7 +45,7 @@ class SignUpViewSet(APIView):
         send_mail(username,
                   f'Ваш код подтверждения: {confirmation_code}',
                   settings.SERVER_EMAIL,
-                  [email,],
+                  [email, ],
                   fail_silently=False,)
         return Response(request.data,
                         status=status.HTTP_200_OK)
@@ -53,7 +53,7 @@ class SignUpViewSet(APIView):
 
 class TokenApiView(APIView):
     """Авторизуем пользователя и выдаем токен."""
-    permission_classes = [permissions.AllowAny,]
+    permission_classes = [permissions.AllowAny, ]
 
     def post(self, request):
         serializer = TokenSerializator(data=request.data)

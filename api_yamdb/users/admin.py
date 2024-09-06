@@ -11,5 +11,5 @@ class CustomUserAdmin(admin.ModelAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     model = User
-    list_display = ['username', 'email', 'role',]
+    list_display = ['username', 'email', 'role', ]
     list_editable = 'role',
