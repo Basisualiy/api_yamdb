@@ -13,7 +13,6 @@ from .serializers import (
     TitlesWriteSerializer,
     ReviewSerializer,
     CommentSerializer,
-
 )
 from reviews.models import Category, Genre, Title, Review, Comments
 from users.views import CustomPaginator
@@ -61,6 +60,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'head', 'options', 'post', 'patch', 'delete']
 
     def get_queryset(self):
+        """Добавляем возможность фильтрации по query_params."""
         queryset = (
             Title.objects.all()
             .annotate(rating=Avg('reviews__score'))
@@ -81,6 +81,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
         return queryset
 
     def get_serializer_class(self):
+        """Выбираем сериализатор для создания или получения произведения."""
         if self.request.method in permissions.SAFE_METHODS:
             return TitlesSerializer
         return TitlesWriteSerializer
@@ -116,6 +117,7 @@ class CommentsViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'head', 'options', 'post', 'patch', 'delete']
 
     def get_queryset(self):
+        """Получаем отзывы для текущего произведения."""
         review = get_object_or_404(
             Review,
             id=self.kwargs.get('review_id'),
@@ -123,6 +125,7 @@ class CommentsViewSet(viewsets.ModelViewSet):
         return review.comments.all()
 
     def perform_create(self, serializer):
+        """Сохраняем текущего пользователя как автора произведения."""
         review = get_object_or_404(
             Review,
             id=self.kwargs.get('review_id'),

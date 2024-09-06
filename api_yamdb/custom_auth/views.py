@@ -14,10 +14,12 @@ User = get_user_model()
 
 
 def get_confirmation_code(email, username):
+    """Генерируем код подтверждения из логина и email."""
     return str(hash(email + username))[1:9]
 
 
 class SignUpViewSet(APIView):
+    """Регистрируем пользователя и высылаем ему код подтверждения."""
     permission_classes = [permissions.AllowAny,]
 
     def post(self, request):
@@ -33,7 +35,6 @@ class SignUpViewSet(APIView):
         if not user.exists():
             serializer = SignUpSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            # self.perform_create(serializer)
             user = User.objects.create(
                 username=username,
                 email=email)
@@ -52,6 +53,7 @@ class SignUpViewSet(APIView):
 
 
 class TokenApiView(APIView):
+    """Авторизуем пользователя и выдаем токен."""
     permission_classes = [permissions.AllowAny,]
 
     def post(self, request):

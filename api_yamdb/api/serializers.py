@@ -43,6 +43,7 @@ class TitlesSerializer(serializers.ModelSerializer):
         )
 
     def to_representation(self, instance):
+        """Если у произведения есть рейтинг, то выдаем его в запросе"""
         data = super().to_representation(instance)
         try:
             data['rating'] = instance.rating
@@ -52,7 +53,7 @@ class TitlesSerializer(serializers.ModelSerializer):
 
 
 class TitlesWriteSerializer(serializers.ModelSerializer):
-    """Сериализатор для произведений."""
+    """Сериализатор для создания произведения."""
 
     category = serializers.SlugRelatedField(
         slug_field='slug',
@@ -74,6 +75,7 @@ class TitlesWriteSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
+        """Создает произведения, добавляя уже существующие жанры."""
         try:
             genres = validated_data.pop('genre')
         except KeyError:
