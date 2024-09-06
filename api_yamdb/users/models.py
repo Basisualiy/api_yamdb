@@ -13,7 +13,7 @@ ROLES = [
 class CustomUser(AbstractUser):
     username = models.CharField(
         'Имя пользователя', max_length=150, unique=True,
-        validators=[validators.RegexValidator(r'^[\w.@+-]+\Z'), ])
+        validators=[validators.RegexValidator(r'^[\w.@+-]+\Z')])
     email = models.EmailField('email пользователя',
                               max_length=254)
     first_name = models.CharField('Имя',

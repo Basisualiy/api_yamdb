@@ -19,7 +19,7 @@ def get_confirmation_code(email, username):
 
 class SignUpViewSet(APIView):
     """Регистрируем пользователя и высылаем ему код подтверждения."""
-    permission_classes = [permissions.AllowAny, ]
+    permission_classes = [permissions.AllowAny]
 
     def post(self, request):
         try:
@@ -53,7 +53,7 @@ class SignUpViewSet(APIView):
 
 class TokenApiView(APIView):
     """Авторизуем пользователя и выдаем токен."""
-    permission_classes = [permissions.AllowAny, ]
+    permission_classes = [permissions.AllowAny]
 
     def post(self, request):
         serializer = TokenSerializator(data=request.data)
