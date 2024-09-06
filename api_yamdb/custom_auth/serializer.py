@@ -7,6 +7,7 @@ User = get_user_model()
 
 
 class SignUpSerializer(serializers.ModelSerializer):
+    """Сериализатор для регистрации пользователя."""
     email = serializers.EmailField(
         validators=[UniqueValidator(queryset=User.objects.all())],
         max_length=254)
@@ -32,6 +33,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 
 
 class TokenSerializator(serializers.ModelSerializer):
+    """Сериализатор для авторизации пользователя и выдачи ему токена."""
     username = serializers.CharField(max_length=150)
     confirmation_code = serializers.CharField(source='password')
 

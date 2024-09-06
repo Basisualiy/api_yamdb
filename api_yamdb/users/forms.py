@@ -5,8 +5,7 @@ User = get_user_model()
 
 
 class CustomUserCreationForm(forms.ModelForm):
-    password1 = forms.PasswordInput()
-    password2 = forms.PasswordInput()
+    """Форма создания пользователя в админ-панели."""
 
     class Meta:
         model = User
@@ -19,6 +18,7 @@ class CustomUserCreationForm(forms.ModelForm):
 
 
 class CustomUserChangeForm(forms.ModelForm):
+    """Форма изменения пользователя в админ-панели."""
 
     class Meta:
         model = User

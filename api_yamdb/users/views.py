@@ -15,6 +15,7 @@ class CustomPaginator(PageNumberPagination):
 
 
 class UsersViewSet(viewsets.ModelViewSet):
+    """Позволяет админу работать с пользователями."""
     http_method_names = ['get', 'head', 'options', 'post', 'patch', 'delete']
     queryset = User.objects.all()
     serializer_class = UsersSerializer
@@ -28,6 +29,7 @@ class UsersViewSet(viewsets.ModelViewSet):
 
 @api_view(http_method_names=['GET', 'PATCH'])
 def me(request):
+    """Позволяет пользователю изменить свои данные."""
     if request.auth:
         user = User.objects.get(username=request.user.username)
         if request.method == 'GET':

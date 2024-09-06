@@ -6,6 +6,7 @@ User = get_user_model()
 
 
 class UsersSerializer(serializers.ModelSerializer):
+    """Сериализатор для работы с пользователем."""
     email = serializers.EmailField(
         validators=[UniqueValidator(queryset=User.objects.all())],
         required=True,
@@ -31,6 +32,7 @@ class UsersSerializer(serializers.ModelSerializer):
 
 
 class MeSerializer(serializers.ModelSerializer):
+    """Сериализатор для работы пользователя со своими данными."""
     email = serializers.EmailField(
         validators=[UniqueValidator(queryset=User.objects.all())],
         required=True,
