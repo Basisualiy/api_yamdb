@@ -15,7 +15,7 @@ from .serializers import (
     CommentSerializer,
 
 )
-from reviews.models import Categories, Genres, Titles, Reviews, Comments
+from reviews.models import Category, Genre, Title, Review, Comments
 from users.views import CustomPaginator
 
 
@@ -27,7 +27,7 @@ class CategoriesViewSet(
 ):
     """ViewSet для категорий."""
 
-    queryset = Categories.objects.all()
+    queryset = Category.objects.all()
     permission_classes = IsAdminOrReadOnlyPermission,
     serializer_class = CategoriesSerializer
     filter_backends = [filters.SearchFilter]
@@ -44,7 +44,7 @@ class GenresViewSet(
 ):
     """ViewSet для жанров."""
 
-    queryset = Genres.objects.all()
+    queryset = Genre.objects.all()
     serializer_class = GenresSerializer
     filter_backends = [filters.SearchFilter]
     lookup_field = 'slug'
@@ -62,7 +62,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = (
-            Titles.objects.all()
+            Title.objects.all()
             .annotate(rating=Avg('reviews__score'))
             .order_by('name')
         )
@@ -89,22 +89,21 @@ class TitlesViewSet(viewsets.ModelViewSet):
 class ReviewsViewSet(viewsets.ModelViewSet):
     """ViewSet для отзывов."""
 
-    queryset = Reviews.objects.all()
+    queryset = Review.objects.all()
     permission_classes = IsAuthorOrReadOnlyPermission,
     serializer_class = ReviewSerializer
     pagination_class = CustomPaginator
+    http_method_names = ['get', 'head', 'options', 'post', 'patch', 'delete']
 
     def get_queryset(self):
         """Переопределение получения класса ReviewViewSet."""
-        title = get_object_or_404(Titles, id=self.kwargs.get('title_id'))
+        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
         return title.reviews.all()
 
     def perform_create(self, serializer):
         """Переопределение создания класса ReviewViewSet."""
-        title = get_object_or_404(Titles, id=self.kwargs.get('title_id'))
+        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
         serializer.save(author=self.request.user, title=title)
-
-
 
 
 class CommentsViewSet(viewsets.ModelViewSet):
@@ -114,17 +113,18 @@ class CommentsViewSet(viewsets.ModelViewSet):
     permission_classes = IsAuthorOrReadOnlyPermission,
     serializer_class = CommentSerializer
     pagination_class = CustomPaginator
+    http_method_names = ['get', 'head', 'options', 'post', 'patch', 'delete']
 
     def get_queryset(self):
         review = get_object_or_404(
-            Reviews,
+            Review,
             id=self.kwargs.get('review_id'),
             title_id=self.kwargs.get('title_id'))
         return review.comments.all()
 
     def perform_create(self, serializer):
         review = get_object_or_404(
-            Reviews,
+            Review,
             id=self.kwargs.get('review_id'),
             title_id=self.kwargs.get('title_id'))
         serializer.save(author=self.request.user, review=review)

@@ -1,18 +1,13 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import exceptions, serializers, status
-from reviews.models import Categories, Genres, Titles, Reviews, Comments
-
-
-def instance_to_dict(instance, slug):
-    obj = get_object_or_404(instance, slug=slug)
-    return {'name': obj.name, 'slug': obj.slug}
+from reviews.models import Category, Genre, Title, Review, Comments
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
     """Сериализатор для категорий."""
 
     class Meta:
-        model = Categories
+        model = Category
         fields = ('name', 'slug')
 
 
@@ -20,7 +15,7 @@ class GenresSerializer(serializers.ModelSerializer):
     """Сериализатор для жанров."""
 
     class Meta:
-        model = Genres
+        model = Genre
         fields = ('name', 'slug')
 
 
@@ -31,7 +26,7 @@ class TitlesSerializer(serializers.ModelSerializer):
     genre = GenresSerializer(many=True, read_only=True)
 
     class Meta:
-        model = Titles
+        model = Title
         fields = (
             'id',
             'name',
@@ -61,14 +56,14 @@ class TitlesWriteSerializer(serializers.ModelSerializer):
 
     category = serializers.SlugRelatedField(
         slug_field='slug',
-        queryset=Categories.objects.all()
+        queryset=Category.objects.all()
     )
     genre = serializers.SlugRelatedField(
         many=True, slug_field='slug',
-        queryset=Genres.objects.all())
+        queryset=Genre.objects.all())
 
     class Meta:
-        model = Titles
+        model = Title
         fields = (
             'id',
             'name',
@@ -83,7 +78,7 @@ class TitlesWriteSerializer(serializers.ModelSerializer):
             genres = validated_data.pop('genre')
         except KeyError:
             raise exceptions.ValidationError(code=status.HTTP_400_BAD_REQUEST)
-        title = Titles.objects.create(**validated_data)
+        title = Title.objects.create(**validated_data)
         if isinstance(genres, list) or isinstance(genres, tuple):
             for genre in genres:
                 title.genre.add(genre)
@@ -108,18 +103,20 @@ class ReviewSerializer(serializers.ModelSerializer):
         request = self.context['request']
         author = request.user
         title_id = self.context.get('view').kwargs.get('title_id')
-        title = get_object_or_404(Titles, pk=title_id)
+        title = get_object_or_404(Title, pk=title_id)
         if (
             request.method == 'POST'
-            and Reviews.objects.filter(title=title, author=author).exists()
+            and Review.objects.filter(title=title, author=author).exists()
         ):
-            raise serializers.ValidationError('Вы уже оставляли отзыв на это произведение.')
+            raise serializers.ValidationError(
+                'Вы уже оставляли отзыв на это произведение.'
+            )
         return data
 
     class Meta:
         """Мета класс для ReviewsSerializer."""
 
-        model = Reviews
+        model = Review
         fields = ('id', 'text', 'author', 'score', 'pub_date')
         read_only_fields = ['title']
 
@@ -135,4 +132,4 @@ class CommentSerializer(serializers.ModelSerializer):
         """Мета класс для CommentSerializer."""
 
         model = Comments
-        fields = ('id', 'text', 'author')
+        fields = ('id', 'text', 'author', 'pub_date')

@@ -1,11 +1,11 @@
 from django.contrib import admin
-from .models import Categories, Genres, Titles, Reviews
+from .models import Category, Genre, Title, Review
 
 
 # (｡◕‿◕｡)
 
 
-@admin.register(Categories)
+@admin.register(Category)
 class CategoriesAdmin(admin.ModelAdmin):
     """Настройки отображения модели Categories в административной панели."""
 
@@ -14,7 +14,7 @@ class CategoriesAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 
-@admin.register(Genres)
+@admin.register(Genre)
 class GenresAdmin(admin.ModelAdmin):
     """Настройки отображения модели Genres в административной панели."""
 
@@ -23,7 +23,7 @@ class GenresAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 
-@admin.register(Titles)
+@admin.register(Title)
 class TitlesAdmin(admin.ModelAdmin):
     """Настройки отображения модели Titles в административной панели."""
 
@@ -37,10 +37,10 @@ class TitlesAdmin(admin.ModelAdmin):
     list_filter = ('category', 'genre', 'year')
 
 
-@admin.register(Reviews)
+@admin.register(Review)
 class ReviewsAdmin(admin.ModelAdmin):
     """Настройки отображения модели Reviews в административной панели."""
 
     list_display = ('title', 'author', 'score')
     search_fields = ('title__name', 'author__username', 'text')
-    list_filter = ('score', 'created_at')
+    list_filter = ('score',)

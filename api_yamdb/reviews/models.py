@@ -9,7 +9,7 @@ User = get_user_model()
 # ｡◕‿‿◕｡
 
 
-class Categories(models.Model):
+class Category(models.Model):
     """Модель для хранения категорий (типов) произведений."""
 
     name = models.CharField(
@@ -25,7 +25,7 @@ class Categories(models.Model):
         """Генерирует slug из названия категории, еесли он не указан."""
         if not self.slug:
             self.slug = slugify(self.name)
-        super(Categories, self).save(*args, **kwargs)
+        super(Category, self).save(*args, **kwargs)
 
     class Meta:
         """Мета класс категории."""
@@ -39,7 +39,7 @@ class Categories(models.Model):
         return self.name
 
 
-class Genres(models.Model):
+class Genre(models.Model):
     """Модель для хранения жанров произведений."""
 
     name = models.CharField(
@@ -53,7 +53,7 @@ class Genres(models.Model):
         """Генерирует slug из названия жанра, если он не указан."""
         if not self.slug:
             self.slug = slugify(self.name)
-        super(Genres, self).save(*args, **kwargs)
+        super(Genre, self).save(*args, **kwargs)
 
     class Meta:
         """Мета класс жанра."""
@@ -67,7 +67,7 @@ class Genres(models.Model):
         return self.name
 
 
-class Titles(models.Model):
+class Title(models.Model):
     """Модель для хранения произведений, к которым пишут отзывы."""
 
     name = models.CharField('Произведение', max_length=256)
@@ -80,12 +80,12 @@ class Titles(models.Model):
     )
     description = models.TextField(blank=True, verbose_name='Описание')
     genre = models.ManyToManyField(
-        Genres,
+        Genre,
         related_name='titles',
         verbose_name='Жанр'
     )
     category = models.ForeignKey(
-        Categories,
+        Category,
         on_delete=models.SET_NULL,
         null=True,
         related_name='titles',
@@ -104,11 +104,11 @@ class Titles(models.Model):
         return self.name
 
 
-class Reviews(models.Model):
+class Review(models.Model):
     """Модель для хранения отзывов на произведения."""
 
     title = models.ForeignKey(
-        Titles,
+        Title,
         on_delete=models.CASCADE,
         related_name='reviews'
     )
@@ -125,8 +125,6 @@ class Reviews(models.Model):
         ],
         verbose_name='Рейтинг',
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
     pub_date = models.DateTimeField(
         'Дата публикации',
         auto_now_add=True,
@@ -150,7 +148,7 @@ class Comments(models.Model):
     """Модель для хранения комментариев к отзывам на произведения."""
 
     review = models.ForeignKey(
-        Reviews,
+        Review,
         on_delete=models.CASCADE,
         related_name='comments'
     )
@@ -160,13 +158,16 @@ class Comments(models.Model):
         related_name='comments'
     )
     text = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    pub_date = models.DateTimeField(
+        'Дата публикации',
+        auto_now_add=True,
+        db_index=True
+    )
 
     class Meta:
         """Мета класс комментария."""
 
-        ordering = ('-created_at',)
+        ordering = ('-pub_date',)
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
 

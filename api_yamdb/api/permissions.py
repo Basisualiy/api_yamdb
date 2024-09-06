@@ -36,6 +36,10 @@ class IsAuthorOrReadOnlyPermission(permissions.BasePermission):
     изменение или удаление объекта доступно автору,
     модератору и админу.
     """
+    def has_permission(self, request, view):
+        return (request.method in permissions.SAFE_METHODS
+                or request.user.is_authenticated)
+
     def has_object_permission(self, request, view, obj):
         return (request.method in permissions.SAFE_METHODS
                 or request.user == obj.author
