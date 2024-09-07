@@ -9,62 +9,51 @@ User = get_user_model()
 # ｡◕‿‿◕｡
 
 
-class Category(models.Model):
-    """Модель для хранения категорий (типов) произведений."""
-
-    name = models.CharField(
-        verbose_name='Категория',
-        max_length=256,
-    )
-    slug = models.SlugField(
-        max_length=50,
-        unique=True,
-    )
-
-    def save(self, *args, **kwargs):
-        """Генерирует slug из названия категории, еесли он не указан."""
-        if not self.slug:
-            self.slug = slugify(self.name)
-        super(Category, self).save(*args, **kwargs)
-
-    class Meta:
-        """Мета класс категории."""
-
-        ordering = ('name',)
-        verbose_name = 'Категория'
-        verbose_name_plural = 'Категории'
-
-    def __str__(self):
-        """Описание категории."""
-        return self.name
+def validate_year(value):
+    current_year = timezone.now().year
+    if value > current_year:
+        raise ValueError(f'Год выпуска не может быть больше {current_year}.')
+    if value < 0:
+        raise ValueError('Год выпуска не может быть отрицательным.')
 
 
-class Genre(models.Model):
-    """Модель для хранения жанров произведений."""
+class BaseModel(models.Model):
+    """Абстрактная базовая модель."""
 
-    name = models.CharField(
-        max_length=256,
-        unique=True,
-        verbose_name='Жанр',
-    )
+    name = models.CharField(max_length=256, verbose_name='Название')
     slug = models.SlugField(max_length=50, unique=True)
 
     def save(self, *args, **kwargs):
-        """Генерирует slug из названия жанра, если он не указан."""
+        """Генерирует slug из названия, если он не указан."""
         if not self.slug:
             self.slug = slugify(self.name)
-        super(Genre, self).save(*args, **kwargs)
+        super(BaseModel, self).save(*args, **kwargs)
 
     class Meta:
-        """Мета класс жанра."""
+        """Мета класс абстрактной базовой модели."""
 
+        abstract = True
         ordering = ('name',)
-        verbose_name = 'Жанр'
-        verbose_name_plural = 'Жанры'
 
     def __str__(self):
-        """Описание жанра."""
+        """Описание объекта."""
         return self.name
+
+
+class Category(BaseModel):
+    """Модель для хранения категорий (типов) произведений."""
+
+    class Meta:
+        verbose_name = 'Категория'
+        verbose_name_plural = 'Категории'
+
+
+class Genre(BaseModel):
+    """Модель для хранения жанров произведений."""
+
+    class Meta:
+        verbose_name = 'Жанр'
+        verbose_name_plural = 'Жанры'
 
 
 class Title(models.Model):
@@ -73,10 +62,7 @@ class Title(models.Model):
     name = models.CharField('Произведение', max_length=256)
     year = models.PositiveIntegerField(
         verbose_name='Год выпуска',
-        validators=[
-            MaxValueValidator(timezone.now().year),
-            MinValueValidator(0)
-        ]
+        validators=[validate_year]
     )
     description = models.TextField(blank=True, verbose_name='Описание')
     genre = models.ManyToManyField(
@@ -137,7 +123,10 @@ class Review(models.Model):
         ordering = ('-pub_date',)
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
-        unique_together = ('title', 'author')
+        constraints = [
+            models.UniqueConstraint(fields=['title', 'author'],
+                                    name='unique_review')
+        ]
 
     def __str__(self):
         """Описание отзыва."""
@@ -172,5 +161,5 @@ class Comments(models.Model):
         verbose_name_plural = 'Комментарии'
 
     def __str__(self):
-        """Мета класс комментария."""
+        """Описание комментария."""
         return f'{self.author.username} - {self.review.title.name}'
