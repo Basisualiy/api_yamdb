@@ -63,7 +63,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
         """Добавляем возможность фильтрации по query_params."""
         queryset = (
             Title.objects.all()
-            .annotate(rating=Avg('review__score'))
+            .annotate(rating=Avg('reviews__score'))
             .order_by('name')
         )
         name = self.request.query_params.get('name')
