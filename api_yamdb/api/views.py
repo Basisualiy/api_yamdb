@@ -89,7 +89,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPaginator
 
     @action(detail=True, methods=['GET', 'PATCH'],
-            permission_classes=[IsAuthenticated,])
+            permission_classes=[IsAuthenticated])
     def me(self, request):
         """Позволяет пользователю изменить свои данные."""
         user = get_object_or_404(User, username=request.user.username)
