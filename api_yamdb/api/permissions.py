@@ -1,23 +1,16 @@
 from rest_framework import permissions
 
-ACCESS_LEVEL = {
-    'admin': 0,
-    'moderator': 1,
-    'user': 2,
-}
-
-
-def has_access(user, role):
-    """Проверяет уровень доступа пользователя."""
-    return user.is_authenticated and (
-        ACCESS_LEVEL[user.role] <= ACCESS_LEVEL[role]
-        or user.is_superuser)
+from reviews.models import ADMIN, MODERATOR
 
 
 class IsAdminPermission(permissions.BasePermission):
     """Разрешает действия только админу или суперпользователю."""
     def has_permission(self, request, view):
-        return has_access(request.user, 'admin')
+        request.user.has_access = ADMIN
+        return request.user.is_authenticated and request.user.has_access
+
+    def has_object_permission(self, request, view, obj):
+        return super().has_object_permission(request, view, obj)
 
 
 class IsAdminOrReadOnlyPermission(permissions.BasePermission):
@@ -26,8 +19,10 @@ class IsAdminOrReadOnlyPermission(permissions.BasePermission):
     изменение или удаление объекта доступно только админу.
     """
     def has_permission(self, request, view):
+        request.user.has_access = ADMIN
         return (request.method in permissions.SAFE_METHODS
-                or has_access(request.user, 'admin'))
+                or (request.user.is_authenticated
+                    and request.user.has_access))
 
 
 class IsAuthorOrReadOnlyPermission(permissions.BasePermission):
@@ -41,6 +36,18 @@ class IsAuthorOrReadOnlyPermission(permissions.BasePermission):
                 or request.user.is_authenticated)
 
     def has_object_permission(self, request, view, obj):
+        request.user.has_access = MODERATOR
         return (request.method in permissions.SAFE_METHODS
-                or request.user == obj.author
-                or has_access(request.user, 'moderator'))
+                or request.user.is_authenticated
+                and (request.user == obj.author
+                     or request.user.has_access))
+
+
+class IsAdminOrOwnerPermission(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return request.user.is_authenticated
+
+    def has_object_permission(self, request, view, obj):
+        access = super().has_object_permission(request, view, obj)
+        return access
