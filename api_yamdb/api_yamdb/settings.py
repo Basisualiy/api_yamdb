@@ -27,11 +27,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
+    'django_filters',
     'api',
-    'custom_auth',
-    'users',
     'reviews',
-
 ]
 
 MIDDLEWARE = [
@@ -113,7 +111,7 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
 
-AUTH_USER_MODEL = 'users.CustomUser'
+AUTH_USER_MODEL = 'reviews.CustomUser'
 
 
 REST_FRAMEWORK = {

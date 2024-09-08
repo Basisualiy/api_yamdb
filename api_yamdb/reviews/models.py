@@ -1,12 +1,28 @@
+import uuid
+
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
-from django.core.validators import MaxValueValidator, MinValueValidator
-from django.contrib.auth import get_user_model
+from django.core.validators import (
+    MaxValueValidator, MinValueValidator, RegexValidator)
 from django.utils.text import slugify
 
-User = get_user_model()
-
 # ｡◕‿‿◕｡
+
+ADMIN = 'admin'
+MODERATOR = 'moderator'
+USER = 'user'
+
+ROLES = [
+    (USER, 'Пользователь'),
+    (MODERATOR, 'Модератор'),
+    (ADMIN, 'Администратор'),
+]
+ACCESS_LEVEL = {
+    ADMIN: 0,
+    MODERATOR: 1,
+    USER: 2,
+}
 
 
 def validate_year(value):
@@ -38,6 +54,47 @@ class BaseModel(models.Model):
     def __str__(self):
         """Описание объекта."""
         return self.name
+
+
+class CustomUser(AbstractUser):
+    _access = False
+    username = models.CharField(
+        'Имя пользователя', max_length=150, unique=True,
+        validators=[RegexValidator(r'^[\w.@+-]+\Z')])
+    email = models.EmailField('email пользователя',
+                              max_length=254)
+    first_name = models.CharField('Имя',
+                                  max_length=150,
+                                  blank=True)
+    last_name = models.CharField('Фамилия',
+                                 max_length=150,
+                                 blank=True)
+    role = models.CharField('Роль пользователя',
+                            max_length=15,
+                            choices=ROLES,
+                            default=USER)
+    bio = models.TextField('Биография',
+                           blank=True)
+    confirmation_code = models.UUIDField('Код подтверждения',
+                                         default=uuid.uuid4())
+
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+
+    @property
+    def has_access(self):
+        return self._access
+
+    @has_access.setter
+    def has_access(self, role):
+        """Проверяет уровень доступа пользователя."""
+        self._access = (
+            ACCESS_LEVEL[self.role] <= ACCESS_LEVEL[role]
+            or self.is_superuser)
+
+    def __str__(self):
+        return self.username
 
 
 class Category(BaseModel):
@@ -99,7 +156,7 @@ class Review(models.Model):
         related_name='reviews'
     )
     author = models.ForeignKey(
-        User,
+        CustomUser,
         on_delete=models.CASCADE,
         related_name='reviews'
     )
@@ -142,7 +199,7 @@ class Comments(models.Model):
         related_name='comments'
     )
     author = models.ForeignKey(
-        User,
+        CustomUser,
         on_delete=models.CASCADE,
         related_name='comments'
     )
