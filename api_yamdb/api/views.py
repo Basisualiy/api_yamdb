@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -10,20 +11,15 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from django_filters.rest_framework import DjangoFilterBackend
-
-
 from . import serializers
 from .filters import TitleFilter
 from .mixins import GenreAndCategoryMixin, TitleReviewsCommentsMixin
 from .paginators import CustomPaginator
 from .permissions import (
-    IsAdminPermission,
     IsAdminOrReadOnlyPermission,
-    IsAuthorOrReadOnlyPermission
-)
+    IsAuthorOrReadOnlyPermission,
+    IsAdminPermission)
 from .utils import get_confirmation_code
-
 from reviews.models import Category, Genre, Title, Review
 
 
@@ -35,15 +31,9 @@ class SignUpViewSet(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        email = request.data.get('email', None)
-        username = request.data.get('username', None)
-        user = User.objects.filter(
-            username=username, email=email
-        ).first()
-        if user is None:
-            serializer = serializers.SignUpSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            user = User.objects.create(**serializer.validated_data)
+        serializer = serializers.SignUpSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user, _ = User.objects.get_or_create(**serializer.validated_data)
         confirmation_code = get_confirmation_code(user.email,
                                                   user.username)
         user.confirmation_code = confirmation_code
@@ -92,18 +82,11 @@ class UsersViewSet(viewsets.ModelViewSet):
             permission_classes=[IsAuthenticated])
     def me(self, request):
         """Позволяет пользователю изменить свои данные."""
-        user = get_object_or_404(User, username=request.user.username)
-        if request.method == 'GET':
-            serializer = serializers.MeSerializer(user)
-            return Response(serializer.data)
-        if request.method == 'PATCH':
-            serializer = serializers.MeSerializer(user, data=request.data,
-                                                  partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data)
-            return Response(serializer.errors,
-                            status=status.HTTP_400_BAD_REQUEST)
+        serializer = serializers.MeSerializer(request.user, data=request.data,
+                                              partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
 
 class CategoriesViewSet(

@@ -1,3 +1,5 @@
+import re
+
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import exceptions, serializers, status
@@ -10,19 +12,39 @@ User = get_user_model()
 
 class SignUpSerializer(serializers.ModelSerializer):
     """Сериализатор для регистрации пользователя."""
-    email = serializers.EmailField(
-        validators=[UniqueValidator(queryset=User.objects.all())],
-        max_length=254)
+    email = serializers.EmailField(max_length=254)
+    username = serializers.CharField(max_length=50)
 
     class Meta:
         model = User
         fields = ('email', 'username',)
 
-    def validate_username(self, value):
-        if value == 'me':
+    def validate(self, attrs):
+        try:
+            email = self.initial_data['email']
+            username = self.initial_data['username']
+        except KeyError:
+            raise exceptions.ValidationError(code=status.HTTP_400_BAD_REQUEST)
+        if username == 'me':
             raise exceptions.ValidationError(
-                'Имя пользователя не может быть: me')
-        return value
+                f'Имя - {username} запрещено использовать для регистрации',
+                code=status.HTTP_400_BAD_REQUEST)
+        if re.match('^[\\w.@+-]+\\Z', username) is None:
+            raise exceptions.ValidationError(
+                'Имя пользователя не соответствует шаблону',
+                code=status.HTTP_400_BAD_REQUEST
+            )
+        user = User.objects.filter(username=username).first()
+        if user and user.email != email:
+            raise exceptions.ValidationError(
+                f'Пользователь с username = {username} уже зарегистрирован',
+                code=status.HTTP_400_BAD_REQUEST)
+        user = User.objects.filter(email=email).first()
+        if user and user.username != username:
+            raise exceptions.ValidationError(
+                f'Пользователь с email = {email} уже зарегистрирован',
+                code=status.HTTP_400_BAD_REQUEST)
+        return super().validate(attrs)
 
 
 class TokenSerializator(serializers.ModelSerializer):
@@ -67,7 +89,7 @@ class UsersSerializer(serializers.ModelSerializer):
         )
 
 
-class MeSerializer(UsersSerializer):  # Доделать
+class MeSerializer(UsersSerializer):
     """Сериализатор для работы пользователя со своими данными."""
     role = serializers.CharField(read_only=True)
 
@@ -93,7 +115,8 @@ class TitlesSerializer(serializers.ModelSerializer):
 
     category = CategoriesSerializer(read_only=True)
     genre = GenresSerializer(many=True, read_only=True)
-
+    rating = serializers.IntegerField(read_only=True)
+    
     class Meta:
         model = Title
         fields = (
@@ -103,6 +126,7 @@ class TitlesSerializer(serializers.ModelSerializer):
             'description',
             'genre',
             'category',
+            'rating'
         )
         read_only_fields = (
             'id',
@@ -110,15 +134,6 @@ class TitlesSerializer(serializers.ModelSerializer):
             'year',
             'description',
         )
-
-    def to_representation(self, instance):
-        """Если у произведения есть рейтинг, то выдаем его в запросе"""
-        data = super().to_representation(instance)
-        try:
-            data['rating'] = instance.rating
-        except AttributeError:
-            pass
-        return data
 
 
 class TitlesWriteSerializer(serializers.ModelSerializer):
@@ -142,22 +157,6 @@ class TitlesWriteSerializer(serializers.ModelSerializer):
             'genre',
             'category',
         )
-
-    def create(self, validated_data):
-        """Создает произведения, добавляя уже существующие жанры."""
-        try:
-            genres = validated_data.pop('genre')
-        except KeyError:
-            raise exceptions.ValidationError(code=status.HTTP_400_BAD_REQUEST)
-        title = Title.objects.create(**validated_data)
-        if isinstance(genres, list) or isinstance(genres, tuple):
-            for genre in genres:
-                title.genre.add(genre)
-                title.save()
-        else:
-            title.genre.add(genres)
-            title.save()
-        return title
 
 
 class ReviewSerializer(serializers.ModelSerializer):

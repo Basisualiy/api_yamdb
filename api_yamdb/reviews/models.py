@@ -2,10 +2,11 @@ import uuid
 
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.utils import timezone
 from django.core.validators import (
     MaxValueValidator, MinValueValidator, RegexValidator)
 from django.utils.text import slugify
+
+from .validators import validate_year
 
 # ｡◕‿‿◕｡
 
@@ -25,15 +26,7 @@ ACCESS_LEVEL = {
 }
 
 
-def validate_year(value):
-    current_year = timezone.now().year
-    if value > current_year:
-        raise ValueError(f'Год выпуска не может быть больше {current_year}.')
-    if value < 0:
-        raise ValueError('Год выпуска не может быть отрицательным.')
-
-
-class BaseModel(models.Model):
+class AddSlugNameFieldsModel(models.Model):
     """Абстрактная базовая модель."""
 
     name = models.CharField(max_length=256, verbose_name='Название')
@@ -43,7 +36,7 @@ class BaseModel(models.Model):
         """Генерирует slug из названия, если он не указан."""
         if not self.slug:
             self.slug = slugify(self.name)
-        super(BaseModel, self).save(*args, **kwargs)
+        super(AddSlugNameFieldsModel, self).save(*args, **kwargs)
 
     class Meta:
         """Мета класс абстрактной базовой модели."""
@@ -97,7 +90,7 @@ class CustomUser(AbstractUser):
         return self.username
 
 
-class Category(BaseModel):
+class Category(AddSlugNameFieldsModel):
     """Модель для хранения категорий (типов) произведений."""
 
     class Meta:
@@ -105,7 +98,7 @@ class Category(BaseModel):
         verbose_name_plural = 'Категории'
 
 
-class Genre(BaseModel):
+class Genre(AddSlugNameFieldsModel):
     """Модель для хранения жанров произведений."""
 
     class Meta:

@@ -9,9 +9,6 @@ class IsAdminPermission(permissions.BasePermission):
         request.user.has_access = ADMIN
         return request.user.is_authenticated and request.user.has_access
 
-    def has_object_permission(self, request, view, obj):
-        return super().has_object_permission(request, view, obj)
-
 
 class IsAdminOrReadOnlyPermission(permissions.BasePermission):
     """
@@ -47,7 +44,3 @@ class IsAdminOrOwnerPermission(permissions.BasePermission):
 
     def has_permission(self, request, view):
         return request.user.is_authenticated
-
-    def has_object_permission(self, request, view, obj):
-        access = super().has_object_permission(request, view, obj)
-        return access
