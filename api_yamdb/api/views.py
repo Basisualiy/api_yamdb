@@ -92,18 +92,11 @@ class UsersViewSet(viewsets.ModelViewSet):
             permission_classes=[IsAuthenticated])
     def me(self, request):
         """Позволяет пользователю изменить свои данные."""
-        user = get_object_or_404(User, username=request.user.username)
-        if request.method == 'GET':
-            serializer = serializers.MeSerializer(user)
-            return Response(serializer.data)
-        if request.method == 'PATCH':
-            serializer = serializers.MeSerializer(user, data=request.data,
-                                                  partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data)
-            return Response(serializer.errors,
-                            status=status.HTTP_400_BAD_REQUEST)
+        serializer = serializers.MeSerializer(request.user, data=request.data,
+                                              partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
 
 class CategoriesViewSet(

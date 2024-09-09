@@ -67,7 +67,7 @@ class UsersSerializer(serializers.ModelSerializer):
         )
 
 
-class MeSerializer(UsersSerializer):  # Доделать
+class MeSerializer(UsersSerializer):
     """Сериализатор для работы пользователя со своими данными."""
     role = serializers.CharField(read_only=True)
 
@@ -111,15 +111,6 @@ class TitlesSerializer(serializers.ModelSerializer):
             'description',
         )
 
-    def to_representation(self, instance):
-        """Если у произведения есть рейтинг, то выдаем его в запросе"""
-        data = super().to_representation(instance)
-        try:
-            data['rating'] = instance.rating
-        except AttributeError:
-            pass
-        return data
-
 
 class TitlesWriteSerializer(serializers.ModelSerializer):
     """Сериализатор для создания произведения."""
@@ -142,22 +133,6 @@ class TitlesWriteSerializer(serializers.ModelSerializer):
             'genre',
             'category',
         )
-
-    def create(self, validated_data):
-        """Создает произведения, добавляя уже существующие жанры."""
-        try:
-            genres = validated_data.pop('genre')
-        except KeyError:
-            raise exceptions.ValidationError(code=status.HTTP_400_BAD_REQUEST)
-        title = Title.objects.create(**validated_data)
-        if isinstance(genres, list) or isinstance(genres, tuple):
-            for genre in genres:
-                title.genre.add(genre)
-                title.save()
-        else:
-            title.genre.add(genres)
-            title.save()
-        return title
 
 
 class ReviewSerializer(serializers.ModelSerializer):
