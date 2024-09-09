@@ -82,7 +82,11 @@ class UsersViewSet(viewsets.ModelViewSet):
             permission_classes=[IsAuthenticated])
     def me(self, request):
         """Позволяет пользователю изменить свои данные."""
-        serializer = serializers.MeSerializer(request.user, data=request.data,
+        user = request.user
+        if request.method == 'GET':
+            serializer = serializers.MeSerializer(user)
+            return Response(serializer.data)
+        serializer = serializers.MeSerializer(user, data=request.data,
                                               partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
